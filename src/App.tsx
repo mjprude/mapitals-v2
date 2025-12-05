@@ -510,7 +510,10 @@ function App() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const el = document.activeElement as HTMLElement | null
-      if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return
+      // Ignore if focus is on form elements or buttons (like the dropdown trigger)
+      if (el && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(el.tagName)) return
+      // Also ignore if focus is on any element with a role that suggests it's interactive
+      if (el && el.getAttribute('role') === 'combobox') return
       if (e.metaKey || e.ctrlKey || e.altKey) return
 
       const raw = e.key
@@ -567,10 +570,18 @@ function App() {
               >
                 <Info size={20} />
               </Button>
-              <Select value={region} onValueChange={(value) => setRegion(value as Region)}>
-                <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
-                  <SelectValue placeholder="Region" />
-                </SelectTrigger>
+                            <Select value={region} onValueChange={(value) => {
+                                setRegion(value as Region)
+                                // Blur the dropdown after selection so keyboard events go to the game
+                                setTimeout(() => {
+                                  if (document.activeElement instanceof HTMLElement) {
+                                    document.activeElement.blur()
+                                  }
+                                }, 0)
+                              }}>
+                              <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
+                                <SelectValue placeholder="Region" />
+                              </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 9999 }}>
                   <SelectItem value="World" className="text-white hover:bg-slate-700">World</SelectItem>
                   <SelectItem value="Americas" className="text-white hover:bg-slate-700">Americas</SelectItem>
