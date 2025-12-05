@@ -10,12 +10,12 @@ import { Region, Capital, StateCapital, CAPITALS, US_STATE_CAPITALS } from './ca
 
 const MAX_WRONG_GUESSES = 6
 
+// US center coordinates (roughly center of continental US)
+const US_CENTER: [number, number] = [39.8, -98.5]
+
 function MapController({ zoom, center, isInitial, shouldPan, gameOver, isUSStatesMode }: { zoom: number; center: [number, number]; isInitial: boolean; shouldPan: boolean; gameOver: boolean; isUSStatesMode: boolean }) {
   const map = useMap()
   const hasInitialized = useRef(false)
-  
-  // US center coordinates (roughly center of continental US)
-  const US_CENTER: [number, number] = [39.8, -98.5]
   
   useEffect(() => {
     if (!hasInitialized.current || isInitial) {
@@ -186,7 +186,7 @@ function App() {
     } else if (isUSStatesMode && shuffledStateCapitals.length > 0) {
       startNewGame()
     }
-  }, [shuffledCapitals.length, shuffledStateCapitals.length])
+  }, [shuffledCapitals.length, shuffledStateCapitals.length, isUSStatesMode, startNewGame])
 
   // Start new game when region changes (after shuffle is done)
   const prevRegionRef = useRef<Region | null>(null)
