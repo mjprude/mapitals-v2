@@ -372,18 +372,24 @@ function App() {
                   <SelectItem value="US States" className="text-white hover:bg-slate-700">US States</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-sm">
-                Score: <span className="text-emerald-400 font-bold">{score}</span>
-              </span>
+              {/* Score */}
+              <div className={isMobile ? "flex flex-col items-center text-xs" : "flex items-baseline gap-1 text-sm"}>
+                <span className="whitespace-nowrap">{isMobile ? "Score" : "Score:"}</span>
+                <span className="text-emerald-400 font-bold">{score}</span>
+              </div>
+              {/* Games - desktop only */}
               {!isMobile && (
-                <span className="text-sm">
-                  Games: <span className="text-emerald-400 font-bold">{gamesPlayed}</span>
-                </span>
+                <div className="flex items-baseline gap-1 text-sm">
+                  <span className="whitespace-nowrap">Games:</span>
+                  <span className="text-emerald-400 font-bold">{gamesPlayed}</span>
+                </div>
               )}
-              <span className="text-sm">
-                Streak: <span className="text-amber-400 font-bold">{currentStreak}</span>
+              {/* Streak */}
+              <div className={isMobile ? "flex flex-col items-center text-xs" : "flex items-baseline gap-1 text-sm"}>
+                <span className="whitespace-nowrap">{isMobile ? "Streak" : "Streak:"}</span>
+                <span className="text-amber-400 font-bold">{currentStreak}</span>
                 {!isMobile && bestStreak > 0 && <span className="text-slate-400 text-xs ml-1">(best: {bestStreak})</span>}
-              </span>
+              </div>
             </div>
           </div>
         </header>
