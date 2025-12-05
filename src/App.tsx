@@ -101,6 +101,16 @@ function App() {
     const saved = localStorage.getItem('mapitals-games-played')
     return saved ? parseInt(saved, 10) : 0
   })
+  
+  // Streak tracking
+  const [currentStreak, setCurrentStreak] = useState(() => {
+    const saved = localStorage.getItem('mapitals-current-streak')
+    return saved ? parseInt(saved, 10) : 0
+  })
+  const [bestStreak, setBestStreak] = useState(() => {
+    const saved = localStorage.getItem('mapitals-best-streak')
+    return saved ? parseInt(saved, 10) : 0
+  })
 
   const isUSStatesMode = region === 'US States'
 
@@ -118,6 +128,15 @@ function App() {
   useEffect(() => {
     localStorage.setItem('mapitals-games-played', gamesPlayed.toString())
   }, [gamesPlayed])
+
+  // Save streaks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('mapitals-current-streak', currentStreak.toString())
+  }, [currentStreak])
+
+  useEffect(() => {
+    localStorage.setItem('mapitals-best-streak', bestStreak.toString())
+  }, [bestStreak])
 
   // Shuffle capitals when region changes (for non-US States modes)
   useEffect(() => {
@@ -242,6 +261,8 @@ function App() {
       if (newWrongGuesses >= MAX_WRONG_GUESSES) {
         setGameOver(true)
         setGamesPlayed(prev => prev + 1)
+        // Reset streak on loss
+        setCurrentStreak(0)
       }
     } else {
       const tempGuessed = new Set(newGuessedLetters)
@@ -251,6 +272,12 @@ function App() {
         setWon(true)
         setScore(prev => prev + (MAX_WRONG_GUESSES - wrongGuesses))
         setGamesPlayed(prev => prev + 1)
+        // Update streaks on win
+        setCurrentStreak(prev => {
+          const newStreak = prev + 1
+          setBestStreak(best => Math.max(best, newStreak))
+          return newStreak
+        })
       }
     }
   }, [gameOver, guessedLetters, currentCapital, currentStateCapital, wrongGuesses, isUSStatesMode])
@@ -260,6 +287,8 @@ function App() {
     setGameOver(true)
     setWon(false)
     setGamesPlayed(prev => prev + 1)
+    // Reset streak on give up
+    setCurrentStreak(0)
   }, [gameOver])
 
   useEffect(() => {
@@ -343,14 +372,24 @@ function App() {
                   <SelectItem value="US States" className="text-white hover:bg-slate-700">US States</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-sm">
-                Score: <span className="text-emerald-400 font-bold">{score}</span>
-              </span>
+              {/* Score */}
+              <div className={isMobile ? "flex flex-col items-center text-xs" : "flex items-baseline gap-1 text-sm"}>
+                <span className="whitespace-nowrap">{isMobile ? "Score" : "Score:"}</span>
+                <span className="text-emerald-400 font-bold">{score}</span>
+              </div>
+              {/* Games - desktop only */}
               {!isMobile && (
-                <span className="text-sm">
-                  Games: <span className="text-emerald-400 font-bold">{gamesPlayed}</span>
-                </span>
+                <div className="flex items-baseline gap-1 text-sm">
+                  <span className="whitespace-nowrap">Games:</span>
+                  <span className="text-emerald-400 font-bold">{gamesPlayed}</span>
+                </div>
               )}
+              {/* Streak */}
+              <div className={isMobile ? "flex flex-col items-center text-xs" : "flex items-baseline gap-1 text-sm"}>
+                <span className="whitespace-nowrap">{isMobile ? "Streak" : "Streak:"}</span>
+                <span className="text-amber-400 font-bold">{currentStreak}</span>
+                {!isMobile && bestStreak > 0 && <span className="text-slate-400 text-xs ml-1">(best: {bestStreak})</span>}
+              </div>
             </div>
           </div>
         </header>
