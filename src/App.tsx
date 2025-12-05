@@ -281,14 +281,12 @@ function MapController({ zoom, center, isInitial, shouldPan, gameOver, isUSState
   
   // US center coordinates (roughly center of continental US)
   const US_CENTER: [number, number] = [39.8, -98.5]
-  const US_ZOOM = 4
   
   useEffect(() => {
     if (!hasInitialized.current || isInitial) {
-      // Initial load: center on 0,0 for world, or US center for US States mode
+      // Initial load: center on 0,0 for world, or US center for US States mode (same zoom level)
       const initialCenter = isUSStatesMode ? US_CENTER : [0, 0] as [number, number]
-      const initialZoom = isUSStatesMode ? US_ZOOM : zoom
-      map.setView(initialCenter, initialZoom, { animate: false })
+      map.setView(initialCenter, zoom, { animate: false })
       hasInitialized.current = true
     } else if (shouldPan && !gameOver) {
       // On wrong guess: pan to location (keep same zoom)
