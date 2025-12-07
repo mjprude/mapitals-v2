@@ -5,7 +5,7 @@ import './App.css'
 import { Button } from '@/components/ui/button'
 import { Flag } from 'lucide-react'
 
-import { Region, Capital, StateCapital, CAPITALS, US_STATE_CAPITALS } from './capitals'
+import { Region, Capital, StateCapital, CAPITALS, US_STATE_CAPITALS, REGION_ORDER } from './capitals'
 import { useIsMobile } from './hooks/use-mobile'
 import { MAX_WRONG_GUESSES, ADJUSTED_ZOOM_LEVELS } from './constants/game'
 import { shuffleArray } from './utils/shuffle'
@@ -282,6 +282,19 @@ function App() {
     setShouldPan(false)
     setTimeout(() => setIsInitialLoad(false), 100)
   }, [getNextCapital, getNextStateCapital, isUSStatesMode, gameMode, region, todayDate])
+
+  // Handler for game over primary action (Next Region in daily mode, Play Again in practice mode)
+  const handleGameOverPrimaryAction = useCallback(() => {
+    if (gameMode === 'daily') {
+      // In daily mode, cycle to the next region
+      const index = REGION_ORDER.indexOf(region)
+      const nextRegion = REGION_ORDER[(index + 1) % REGION_ORDER.length]
+      setRegion(nextRegion) // The useEffect on region will call startNewGame
+    } else {
+      // In practice mode, just start a new game in the same region
+      startNewGame()
+    }
+  }, [gameMode, region, startNewGame])
 
   // Initialize game on first load (only once)
   useEffect(() => {
@@ -596,7 +609,7 @@ function App() {
               city={city}
               regionName={regionName}
               wrongGuesses={wrongGuesses}
-              onPlayAgain={startNewGame}
+              onPlayAgain={handleGameOverPrimaryAction}
               isUSStatesMode={isUSStatesMode}
               gameMode={gameMode}
               region={region}

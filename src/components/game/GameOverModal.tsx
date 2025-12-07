@@ -203,8 +203,7 @@ export function GameOverModal({
           {gameMode === 'daily' && (
             <Button
               onClick={handleShare}
-              variant="outline"
-              className="flex-1 border-slate-500 text-slate-200 hover:bg-slate-700 hover:text-white"
+              className="flex-1 bg-slate-700 text-white border border-slate-500 hover:bg-slate-600"
             >
               {copied ? (
                 <>
