@@ -17,7 +17,7 @@ const US_CENTER: [number, number] = [39.8, -98.5]
 function MapController({ zoom, center, isInitial, shouldPan, gameOver, isUSStatesMode }: { zoom: number; center: [number, number]; isInitial: boolean; shouldPan: boolean; gameOver: boolean; isUSStatesMode: boolean }) {
   const map = useMap()
   const hasInitialized = useRef(false)
-  
+
   useEffect(() => {
     if (!hasInitialized.current || isInitial) {
       // Initial load: center on 0,0 for world, or US center for US States mode (same zoom level)
@@ -111,13 +111,13 @@ function App() {
       }, 0)
     }
   }
-  
+
   // Shuffled lists and indices for each category to avoid repeats
   const [shuffledCapitals, setShuffledCapitals] = useState<Capital[]>([])
   const [shuffledStateCapitals, setShuffledStateCapitals] = useState<StateCapital[]>([])
   const [capitalIndex, setCapitalIndex] = useState(0)
   const [stateCapitalIndex, setStateCapitalIndex] = useState(0)
-  
+
   // Load score and gamesPlayed from localStorage
   const [score, setScore] = useState(() => {
     const saved = localStorage.getItem('mapitals-score')
@@ -128,6 +128,16 @@ function App() {
     return saved ? parseInt(saved, 10) : 0
   })
   
+  // Streak tracking
+  const [currentStreak, setCurrentStreak] = useState(() => {
+    const saved = localStorage.getItem('mapitals-current-streak')
+    return saved ? parseInt(saved, 10) : 0
+  })
+  const [bestStreak, setBestStreak] = useState(() => {
+    const saved = localStorage.getItem('mapitals-best-streak')
+    return saved ? parseInt(saved, 10) : 0
+  })
+
   // Streak tracking
   const [currentStreak, setCurrentStreak] = useState(() => {
     const saved = localStorage.getItem('mapitals-current-streak')
@@ -282,7 +292,7 @@ function App() {
 
   const handleGuess = useCallback((letter: string) => {
     if (gameOver || guessedLetters.has(letter.toLowerCase())) return
-    
+
     const newGuessedLetters = new Set(guessedLetters)
     newGuessedLetters.add(letter.toLowerCase())
     setGuessedLetters(newGuessedLetters)
@@ -305,7 +315,7 @@ function App() {
       }
     } else {
       const tempGuessed = new Set(newGuessedLetters)
-      if (isWordCompleteWithSet(city, tempGuessed) && 
+      if (isWordCompleteWithSet(city, tempGuessed) &&
           isWordCompleteWithSet(regionName, tempGuessed)) {
         setGameOver(true)
         setWon(true)
@@ -339,7 +349,7 @@ function App() {
     const onKeyDown = (e: KeyboardEvent) => {
       // Ignore keypresses while the region dropdown is open
       if (isRegionMenuOpen) return
-      
+
       const el = document.activeElement as HTMLElement | null
       if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return
       if (e.metaKey || e.ctrlKey || e.altKey) return
@@ -364,7 +374,7 @@ function App() {
   // Keep zoom constant - first two levels are the same so first wrong guess only pans
   const ADJUSTED_ZOOM_LEVELS = [2, 2, 3, 3.5, 4, 5, 6]
   const currentZoom = ADJUSTED_ZOOM_LEVELS[Math.min(wrongGuesses, ADJUSTED_ZOOM_LEVELS.length - 1)]
-  
+
   const mapCenter: [number, number] = isUSStatesMode
     ? (currentStateCapital ? [currentStateCapital.lat, currentStateCapital.lng] : [0, 0])
     : (currentCapital ? [currentCapital.lat, currentCapital.lng] : [0, 0])
@@ -398,8 +408,8 @@ function App() {
               >
                 <Info size={20} />
               </Button>
-              <Select 
-                value={region} 
+              <Select
+                value={region}
                 onValueChange={(value) => setRegion(value as Region)}
                 onOpenChange={handleOpenChange}
               >
@@ -458,7 +468,7 @@ function App() {
                 url={tileUrl}
               />
               {gameOver && countryGeoJson && currentCapital && !isUSStatesMode && (
-                <GeoJSON 
+                <GeoJSON
                   key={currentCapital.country}
                   data={countryGeoJson}
                   style={getCountryStyle}
@@ -471,7 +481,7 @@ function App() {
               <MapController zoom={currentZoom} center={mapCenter} isInitial={isInitialLoad} shouldPan={shouldPan} gameOver={gameOver} isUSStatesMode={isUSStatesMode} />
             </MapContainer>
           </div>
-            
+
           <div className="absolute top-4 left-4 bg-slate-900/80 px-4 py-2 rounded-lg backdrop-blur-sm flex items-center gap-3" style={{ zIndex: 1000 }}>
             <span className="text-red-400 font-bold">
               Wrong guesses: {wrongGuesses} / {MAX_WRONG_GUESSES}
@@ -552,7 +562,7 @@ function App() {
                 <div className="bg-slate-900/80 backdrop-blur-sm rounded-lg px-4 py-3 flex-1">
                   <p className="text-emerald-400 text-sm font-semibold mb-1">{isUSStatesMode ? 'State Capital' : 'Capital City'}</p>
                   <p className="text-xl sm:text-2xl font-mono tracking-widest text-white">
-                    {isUSStatesMode 
+                    {isUSStatesMode
                       ? (currentStateCapital ? (gameOver ? currentStateCapital.city : getDisplayText(currentStateCapital.city)) : '')
                       : (currentCapital ? (gameOver ? currentCapital.city : getDisplayText(currentCapital.city)) : '')}
                   </p>
@@ -575,7 +585,7 @@ function App() {
                       ? (currentStateCapital ? `${currentStateCapital.city}${currentStateCapital.state}`.toLowerCase() : '')
                       : (currentCapital ? `${currentCapital.city}${currentCapital.country}`.toLowerCase() : '')
                     const isCorrect = fullText.includes(letter.toLowerCase())
-                    
+
                     return (
                       <Button
                         key={letter}
@@ -584,9 +594,9 @@ function App() {
                         variant="outline"
                         className={`
                           ${isMobile ? 'h-9 w-9 text-sm' : 'h-7 w-7 sm:h-8 sm:w-8 text-xs sm:text-sm'} p-0 font-bold
-                          ${isGuessed 
-                        ? isCorrect 
-                          ? 'bg-emerald-600 border-emerald-600 text-white' 
+                          ${isGuessed
+                        ? isCorrect
+                          ? 'bg-emerald-600 border-emerald-600 text-white'
                           : 'bg-red-600 border-red-600 text-white'
                         : 'bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600'
                       }
