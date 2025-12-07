@@ -438,6 +438,7 @@ function App() {
               regionName={regionName}
               wrongGuesses={wrongGuesses}
               onPlayAgain={startNewGame}
+              isUSStatesMode={isUSStatesMode}
             />
           )}
 
