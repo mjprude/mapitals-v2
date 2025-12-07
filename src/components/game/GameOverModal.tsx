@@ -131,7 +131,7 @@ export function GameOverModal({
     <div className="absolute inset-x-0 top-16 flex justify-center" style={{ zIndex: 1001 }}>
       <div 
         ref={modalRef}
-        className="bg-slate-800/70 border border-slate-600 text-white max-w-md rounded-xl p-6 backdrop-blur-sm mx-4 select-none"
+        className="bg-purple-900/80 border border-purple-400/30 text-white max-w-md rounded-xl p-6 backdrop-blur-sm mx-4 select-none"
         style={{ 
           transform: `translate(${position.x}px, ${position.y}px)`,
           cursor: isDragging ? 'grabbing' : 'default'
@@ -146,44 +146,44 @@ export function GameOverModal({
           {won ? "Congratulations!" : "Game Over!"}
         </h2>
         <p className="text-xl mb-2">
-          The answer was: <span className="font-bold text-emerald-400">{city}</span>, <span className="font-bold text-amber-400">{regionName}</span>
+                  The answer was: <span className="font-bold text-yellow-300">{city}</span>, <span className="font-bold text-cyan-300">{regionName}</span>
         </p>
         {won && (
           <p className="text-lg mb-4">
-            Points earned: <span className="text-emerald-400 font-bold">+{MAX_WRONG_GUESSES - wrongGuesses}</span>
+                    Points earned: <span className="text-yellow-300 font-bold">+{MAX_WRONG_GUESSES - wrongGuesses}</span>
           </p>
         )}
         
-        <div className="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
-          <h3 className="text-sm font-semibold text-slate-300 mb-2">
-            About {regionName}
+        <div className="mt-4 p-3 bg-purple-800/50 rounded-lg border border-purple-400/20">
+          <h3 className="text-sm font-semibold text-white/80 mb-2">
+                    About {regionName}
           </h3>
           {isLoadingWikipedia ? (
-            <p className="text-sm text-slate-400 italic">Loading...</p>
+            <p className="text-sm text-white/60 italic">Loading...</p>
           ) : wikipediaBlurb ? (
             <>
-              <p className="text-sm text-slate-300 leading-relaxed mb-2">
+              <p className="text-sm text-white/80 leading-relaxed mb-2">
                 {wikipediaBlurb.extract}
               </p>
               <a 
                 href={wikipediaBlurb.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                className="inline-flex items-center gap-1 text-sm text-cyan-300 hover:text-cyan-200 transition-colors"
               >
-                Read more on Wikipedia <ExternalLink size={14} />
+                        Read more on Wikipedia <ExternalLink size={14} />
               </a>
             </>
           ) : (
-            <p className="text-sm text-slate-400 italic">Could not load information.</p>
+            <p className="text-sm text-white/60 italic">Could not load information.</p>
           )}
         </div>
 
         <Button
           onClick={onPlayAgain}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-4"
+          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
         >
-          Play Again
+                  Play Again
         </Button>
       </div>
     </div>
