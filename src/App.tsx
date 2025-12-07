@@ -185,16 +185,6 @@ function App() {
     }
   }, [showTimedEndModal, timedSessionScore, timedCapitalsGuessed, timedBestScore, timedBestCapitals])
 
-  const startTimedSession = useCallback(() => {
-    setTimeRemaining(TIMED_MODE_DURATION)
-    setTimedCapitalsGuessed(0)
-    setTimedSessionScore(0)
-    setTimedSessionActive(true)
-    setTimerPaused(false)
-    setShowTimedEndModal(false)
-    startNewGame()
-  }, [startNewGame])
-
   const exitTimedMode = useCallback(() => {
     setTimedMode(false)
     setTimedSessionActive(false)
@@ -277,6 +267,16 @@ function App() {
     setShouldPan(false)
     setTimeout(() => setIsInitialLoad(false), 100)
   }, [getNextCapital, getNextStateCapital, isUSStatesMode])
+
+  const startTimedSession = useCallback(() => {
+    setTimeRemaining(TIMED_MODE_DURATION)
+    setTimedCapitalsGuessed(0)
+    setTimedSessionScore(0)
+    setTimedSessionActive(true)
+    setTimerPaused(false)
+    setShowTimedEndModal(false)
+    startNewGame()
+  }, [startNewGame])
 
   // Initialize game on first load (only once)
   useEffect(() => {
