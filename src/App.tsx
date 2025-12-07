@@ -272,9 +272,9 @@ function App() {
       .catch(err => console.error('Failed to load country borders:', err))
   }, [])
 
-  // Load US states GeoJSON
+  // Load US states GeoJSON from local file
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+    fetch('/data/us-states.json')
       .then(res => res.json())
       .then(data => setStatesGeoJson(data))
       .catch(err => console.error('Failed to load US state borders:', err))
