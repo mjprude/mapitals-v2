@@ -86,7 +86,7 @@ function App() {
   // Timed mode state
   const [timedMode, setTimedMode] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState<TimedModeDuration>('1min')
-  const [timeRemaining, setTimeRemaining] = useState(TIMED_MODE_DURATIONS['1min'])
+  const [timeRemaining, setTimeRemaining] = useState<number>(TIMED_MODE_DURATIONS['1min'])
   const [timerPaused, setTimerPaused] = useState(true)
   const [timedSessionActive, setTimedSessionActive] = useState(false)
   const [timedCapitalsGuessed, setTimedCapitalsGuessed] = useState(0)
