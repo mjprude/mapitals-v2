@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Switch } from '@/components/ui/switch'
-import { Info, Settings } from 'lucide-react'
+import { Info, Settings, Clock } from 'lucide-react'
 import { Region } from '@/capitals'
 
 interface HeaderProps {
@@ -36,6 +36,10 @@ interface HeaderProps {
   showStars: boolean
   setShowStars: (show: boolean) => void
   onResetHistory: () => void
+  timedMode: boolean
+  setTimedMode: (enabled: boolean) => void
+  timedSessionActive: boolean
+  onStartTimedSession: () => void
 }
 
 export function Header({
@@ -51,6 +55,10 @@ export function Header({
   showStars,
   setShowStars,
   onResetHistory,
+  timedMode,
+  setTimedMode,
+  timedSessionActive,
+  onStartTimedSession,
 }: HeaderProps) {
   const [showResetDialog, setShowResetDialog] = useState(false)
 
@@ -111,6 +119,30 @@ export function Header({
                     />
                   </div>
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="hover:bg-slate-700 focus:bg-slate-700 cursor-pointer"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <div className="flex items-center justify-between w-full gap-4">
+                    <div className="flex items-center gap-2">
+                      <Clock size={16} className="text-amber-400" />
+                      <span>Timed Mode</span>
+                    </div>
+                    <Switch
+                      checked={timedMode}
+                      onCheckedChange={setTimedMode}
+                    />
+                  </div>
+                </DropdownMenuItem>
+                {timedMode && !timedSessionActive && (
+                  <DropdownMenuItem
+                    className="text-emerald-400 hover:bg-slate-700 focus:bg-slate-700 focus:text-emerald-400 cursor-pointer"
+                    onSelect={onStartTimedSession}
+                  >
+                    <Clock size={16} className="mr-2" />
+                    Start Timed Session
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator className="bg-slate-600" />
                 <DropdownMenuItem
                   className="text-red-400 hover:bg-slate-700 focus:bg-slate-700 focus:text-red-400 cursor-pointer"

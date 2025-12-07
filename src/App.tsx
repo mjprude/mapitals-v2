@@ -3,11 +3,11 @@ import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import './App.css'
 import { Button } from '@/components/ui/button'
-import { Flag } from 'lucide-react'
+import { Flag, Clock } from 'lucide-react'
 
 import { Region, Capital, StateCapital, CAPITALS, US_STATE_CAPITALS } from './capitals'
 import { useIsMobile } from './hooks/use-mobile'
-import { MAX_WRONG_GUESSES, ADJUSTED_ZOOM_LEVELS } from './constants/game'
+import { MAX_WRONG_GUESSES, ADJUSTED_ZOOM_LEVELS, TIMED_MODE_DURATION } from './constants/game'
 import { shuffleArray } from './utils/shuffle'
 import { 
   MapController, 
@@ -17,7 +17,8 @@ import {
   Keyboard, 
   GameDisplay,
   StarMarkers,
-  CompletedCapital
+  CompletedCapital,
+  TimedModeEndModal
 } from './components/game'
 
 function App() {
@@ -82,6 +83,26 @@ function App() {
     return saved ? parseInt(saved, 10) : 0
   })
 
+  // Timed mode state
+  const [timedMode, setTimedMode] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState(TIMED_MODE_DURATION)
+  const [timerPaused, setTimerPaused] = useState(true)
+  const [timedSessionActive, setTimedSessionActive] = useState(false)
+  const [timedCapitalsGuessed, setTimedCapitalsGuessed] = useState(0)
+  const [timedSessionScore, setTimedSessionScore] = useState(0)
+  const [showTimedEndModal, setShowTimedEndModal] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Timed mode best stats from localStorage
+  const [timedBestScore, setTimedBestScore] = useState(() => {
+    const saved = localStorage.getItem('mapitals-timed-best-score')
+    return saved ? parseInt(saved, 10) : 0
+  })
+  const [timedBestCapitals, setTimedBestCapitals] = useState(() => {
+    const saved = localStorage.getItem('mapitals-timed-best-capitals')
+    return saved ? parseInt(saved, 10) : 0
+  })
+
   const isUSStatesMode = region === 'US States'
 
   const capitalsForRegion = useMemo(() =>
@@ -117,6 +138,76 @@ function App() {
   useEffect(() => {
     localStorage.setItem('mapitals-show-stars', showStars.toString())
   }, [showStars])
+
+  // Save timed mode best stats to localStorage
+  useEffect(() => {
+    localStorage.setItem('mapitals-timed-best-score', timedBestScore.toString())
+  }, [timedBestScore])
+
+  useEffect(() => {
+    localStorage.setItem('mapitals-timed-best-capitals', timedBestCapitals.toString())
+  }, [timedBestCapitals])
+
+  // Timer logic
+  useEffect(() => {
+    if (timedMode && timedSessionActive && !timerPaused && timeRemaining > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            setTimerPaused(true)
+            setTimedSessionActive(false)
+            setShowTimedEndModal(true)
+            if (timerRef.current) {
+              clearInterval(timerRef.current)
+            }
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [timedMode, timedSessionActive, timerPaused, timeRemaining])
+
+  // Update best stats when timed session ends
+  useEffect(() => {
+    if (showTimedEndModal) {
+      if (timedSessionScore > timedBestScore) {
+        setTimedBestScore(timedSessionScore)
+      }
+      if (timedCapitalsGuessed > timedBestCapitals) {
+        setTimedBestCapitals(timedCapitalsGuessed)
+      }
+    }
+  }, [showTimedEndModal, timedSessionScore, timedCapitalsGuessed, timedBestScore, timedBestCapitals])
+
+  const startTimedSession = useCallback(() => {
+    setTimeRemaining(TIMED_MODE_DURATION)
+    setTimedCapitalsGuessed(0)
+    setTimedSessionScore(0)
+    setTimedSessionActive(true)
+    setTimerPaused(false)
+    setShowTimedEndModal(false)
+    startNewGame()
+  }, [startNewGame])
+
+  const exitTimedMode = useCallback(() => {
+    setTimedMode(false)
+    setTimedSessionActive(false)
+    setTimerPaused(true)
+    setShowTimedEndModal(false)
+    setTimeRemaining(TIMED_MODE_DURATION)
+  }, [])
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   const resetHistory = useCallback(() => {
     setCompletedCapitals([])
@@ -270,6 +361,10 @@ function App() {
         setGamesPlayed(prev => prev + 1)
         // Reset streak on loss
         setCurrentStreak(0)
+        // Pause timer in timed mode
+        if (timedMode && timedSessionActive) {
+          setTimerPaused(true)
+        }
       }
     } else {
       const tempGuessed = new Set(newGuessedLetters)
@@ -296,9 +391,15 @@ function App() {
             wrongGuesses
           }])
         }
+        // Update timed mode stats and pause timer
+        if (timedMode && timedSessionActive) {
+          setTimedCapitalsGuessed(prev => prev + 1)
+          setTimedSessionScore(prev => prev + (MAX_WRONG_GUESSES - wrongGuesses))
+          setTimerPaused(true)
+        }
       }
     }
-  }, [gameOver, guessedLetters, currentCapital, currentStateCapital, wrongGuesses, isUSStatesMode])
+  }, [gameOver, guessedLetters, currentCapital, currentStateCapital, wrongGuesses, isUSStatesMode, timedMode, timedSessionActive])
 
   const handleGiveUp = useCallback(() => {
     if (gameOver) return
@@ -307,7 +408,19 @@ function App() {
     setGamesPlayed(prev => prev + 1)
     // Reset streak on give up
     setCurrentStreak(0)
-  }, [gameOver])
+    // Pause timer in timed mode
+    if (timedMode && timedSessionActive) {
+      setTimerPaused(true)
+    }
+  }, [gameOver, timedMode, timedSessionActive])
+
+  const handlePlayAgain = useCallback(() => {
+    startNewGame()
+    // Resume timer in timed mode if session is still active
+    if (timedMode && timedSessionActive && timeRemaining > 0) {
+      setTimerPaused(false)
+    }
+  }, [startNewGame, timedMode, timedSessionActive, timeRemaining])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -317,6 +430,13 @@ function App() {
       const el = document.activeElement as HTMLElement | null
       if (el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return
       if (e.metaKey || e.ctrlKey || e.altKey) return
+
+      // Handle Enter key to start next round when game is over
+      if (e.key === 'Enter' && gameOver && !showTimedEndModal) {
+        e.preventDefault()
+        handlePlayAgain()
+        return
+      }
 
       const raw = e.key
       if (raw.length !== 1) return // Ignore multi-character keys like 'Enter', 'ArrowLeft', etc.
@@ -328,12 +448,10 @@ function App() {
       }
     }
 
-    if (!gameOver) {
-      window.addEventListener('keydown', onKeyDown)
-    }
+    window.addEventListener('keydown', onKeyDown)
 
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [gameOver, handleGuess, isRegionMenuOpen])
+  }, [gameOver, handleGuess, isRegionMenuOpen, handlePlayAgain, showTimedEndModal])
 
   const currentZoom = ADJUSTED_ZOOM_LEVELS[Math.min(wrongGuesses, ADJUSTED_ZOOM_LEVELS.length - 1)]
 
@@ -386,6 +504,10 @@ function App() {
           showStars={showStars}
           setShowStars={setShowStars}
           onResetHistory={resetHistory}
+          timedMode={timedMode}
+          setTimedMode={setTimedMode}
+          timedSessionActive={timedSessionActive}
+          onStartTimedSession={startTimedSession}
         />
 
         <main className="flex-1 relative">
@@ -451,14 +573,37 @@ function App() {
             )}
           </div>
 
-          {gameOver && city && regionName && (
+          {timedMode && timedSessionActive && (
+            <div className="absolute top-4 right-4 bg-slate-900/80 px-4 py-2 rounded-lg backdrop-blur-sm flex items-center gap-2" style={{ zIndex: 1000 }}>
+              <Clock className={`${timerPaused ? 'text-amber-400' : 'text-emerald-400'}`} size={20} />
+              <span className={`text-xl font-bold ${timeRemaining <= 10 ? 'text-red-400' : timerPaused ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {formatTime(timeRemaining)}
+              </span>
+              {timerPaused && gameOver && (
+                <span className="text-xs text-slate-400 ml-1">(paused)</span>
+              )}
+            </div>
+          )}
+
+          {gameOver && city && regionName && !showTimedEndModal && (
             <GameOverModal
               won={won}
               city={city}
               regionName={regionName}
               wrongGuesses={wrongGuesses}
-              onPlayAgain={startNewGame}
+              onPlayAgain={handlePlayAgain}
               isUSStatesMode={isUSStatesMode}
+            />
+          )}
+
+          {showTimedEndModal && (
+            <TimedModeEndModal
+              capitalsGuessed={timedCapitalsGuessed}
+              sessionScore={timedSessionScore}
+              bestCapitals={timedBestCapitals}
+              bestScore={timedBestScore}
+              onPlayAgain={startTimedSession}
+              onExitTimedMode={exitTimedMode}
             />
           )}
 
