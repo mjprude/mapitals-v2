@@ -7,7 +7,7 @@ import { Flag } from 'lucide-react'
 
 import { Region, Capital, StateCapital, CAPITALS, US_STATE_CAPITALS, REGION_ORDER } from './capitals'
 import { useIsMobile } from './hooks/use-mobile'
-import { MAX_WRONG_GUESSES, ADJUSTED_ZOOM_LEVELS } from './constants/game'
+import { MAX_WRONG_GUESSES, ADJUSTED_ZOOM_LEVELS, TIMED_MODE_DURATION } from './constants/game'
 import { shuffleArray } from './utils/shuffle'
 import { 
   GameMode,
@@ -30,7 +30,8 @@ import {
   Keyboard, 
   GameDisplay,
   StarMarkers,
-  CompletedCapital
+  CompletedCapital,
+  TimedModeEndModal
 } from './components/game'
 
 function App() {
@@ -130,6 +131,26 @@ function App() {
   const setCurrentStreak = gameMode === 'daily' ? setDailyCurrentStreak : setPracticeCurrentStreak
   const setBestStreak = gameMode === 'daily' ? setDailyBestStreak : setPracticeBestStreak
 
+  // Timed mode state
+  const [timedMode, setTimedMode] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState<number>(TIMED_MODE_DURATION)
+  const [timerPaused, setTimerPaused] = useState(true)
+  const [timedSessionActive, setTimedSessionActive] = useState(false)
+  const [timedCapitalsGuessed, setTimedCapitalsGuessed] = useState(0)
+  const [timedSessionScore, setTimedSessionScore] = useState(0)
+  const [showTimedEndModal, setShowTimedEndModal] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Timed mode best stats from localStorage
+  const [timedBestScore, setTimedBestScore] = useState(() => {
+    const saved = localStorage.getItem('mapitals-timed-best-score')
+    return saved ? parseInt(saved, 10) : 0
+  })
+  const [timedBestCapitals, setTimedBestCapitals] = useState(() => {
+    const saved = localStorage.getItem('mapitals-timed-best-capitals')
+    return saved ? parseInt(saved, 10) : 0
+  })
+
   const isUSStatesMode = region === 'US States'
 
   const capitalsForRegion = useMemo(() =>
@@ -187,6 +208,66 @@ function App() {
   useEffect(() => {
     setDailyCompleted(isDailyCompleted(region, todayDate))
   }, [region, todayDate])
+
+  // Save timed mode best stats to localStorage
+  useEffect(() => {
+    localStorage.setItem('mapitals-timed-best-score', timedBestScore.toString())
+  }, [timedBestScore])
+
+  useEffect(() => {
+    localStorage.setItem('mapitals-timed-best-capitals', timedBestCapitals.toString())
+  }, [timedBestCapitals])
+
+  // Timer logic
+  useEffect(() => {
+    if (timedMode && timedSessionActive && !timerPaused && timeRemaining > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            setTimerPaused(true)
+            setTimedSessionActive(false)
+            setShowTimedEndModal(true)
+            if (timerRef.current) {
+              clearInterval(timerRef.current)
+            }
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [timedMode, timedSessionActive, timerPaused, timeRemaining])
+
+  // Update best stats when timed session ends
+  useEffect(() => {
+    if (showTimedEndModal) {
+      if (timedSessionScore > timedBestScore) {
+        setTimedBestScore(timedSessionScore)
+      }
+      if (timedCapitalsGuessed > timedBestCapitals) {
+        setTimedBestCapitals(timedCapitalsGuessed)
+      }
+    }
+  }, [showTimedEndModal, timedSessionScore, timedCapitalsGuessed, timedBestScore, timedBestCapitals])
+
+  const exitTimedMode = useCallback(() => {
+    setTimedMode(false)
+    setTimedSessionActive(false)
+    setTimerPaused(true)
+    setShowTimedEndModal(false)
+    setTimeRemaining(TIMED_MODE_DURATION)
+  }, [])
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   const resetHistory = useCallback(() => {
     setCompletedCapitals([])
@@ -315,6 +396,22 @@ function App() {
     setGameMode('practice')
   }, [])
 
+  // Start a timed session
+  const startTimedSession = useCallback(() => {
+    setTimedMode(true)
+    setTimeRemaining(TIMED_MODE_DURATION)
+    setTimedCapitalsGuessed(0)
+    setTimedSessionScore(0)
+    setTimedSessionActive(true)
+    setTimerPaused(false)
+    setShowTimedEndModal(false)
+    // Switch to practice mode for timed sessions
+    if (gameMode === 'daily') {
+      setGameMode('practice')
+    }
+    startNewGame()
+  }, [gameMode, startNewGame])
+
   // Initialize game on first load (only once)
   useEffect(() => {
     if (hasGameInitializedRef.current) return
@@ -408,6 +505,10 @@ function App() {
         setGamesPlayed(prev => prev + 1)
         // Reset streak on loss
         setCurrentStreak(0)
+        // Pause timer in timed mode
+        if (timedMode) {
+          setTimerPaused(true)
+        }
         // Save daily result if in daily mode
         if (gameMode === 'daily') {
           saveDailyResult(region, todayDate, {
@@ -433,6 +534,12 @@ function App() {
           setBestStreak(best => Math.max(best, newStreak))
           return newStreak
         })
+        // Pause timer and update timed mode stats
+        if (timedMode) {
+          setTimerPaused(true)
+          setTimedCapitalsGuessed(prev => prev + 1)
+          setTimedSessionScore(prev => prev + (MAX_WRONG_GUESSES - wrongGuesses))
+        }
         // Add completed capital with star marker
         const lat = isUSStatesMode ? currentStateCapital?.lat : currentCapital?.lat
         const lng = isUSStatesMode ? currentStateCapital?.lng : currentCapital?.lng
@@ -456,7 +563,7 @@ function App() {
         }
       }
     }
-  }, [gameOver, guessedLetters, currentCapital, currentStateCapital, wrongGuesses, isUSStatesMode, gameMode, region, todayDate, setScore, setGamesPlayed, setCurrentStreak, setBestStreak])
+  }, [gameOver, guessedLetters, currentCapital, currentStateCapital, wrongGuesses, isUSStatesMode, gameMode, region, todayDate, setScore, setGamesPlayed, setCurrentStreak, setBestStreak, timedMode])
 
   const handleGiveUp = useCallback(() => {
     if (gameOver) return
@@ -465,6 +572,10 @@ function App() {
     setGamesPlayed(prev => prev + 1)
     // Reset streak on give up
     setCurrentStreak(0)
+    // Pause timer in timed mode
+    if (timedMode) {
+      setTimerPaused(true)
+    }
     // Save daily result if in daily mode
     if (gameMode === 'daily') {
       saveDailyResult(region, todayDate, {
@@ -475,7 +586,7 @@ function App() {
       markDailyCompleted(region, todayDate)
       setDailyCompleted(true)
     }
-  }, [gameOver, gameMode, region, todayDate, wrongGuesses, guessedLetters, setGamesPlayed, setCurrentStreak])
+  }, [gameOver, gameMode, region, todayDate, wrongGuesses, guessedLetters, setGamesPlayed, setCurrentStreak, timedMode])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -557,6 +668,12 @@ function App() {
           gameMode={gameMode}
           setGameMode={setGameMode}
           dailyCompleted={dailyCompleted}
+          timedMode={timedMode}
+          timedSessionActive={timedSessionActive}
+          timeRemaining={timeRemaining}
+          timerPaused={timerPaused}
+          onStartTimedSession={startTimedSession}
+          formatTime={formatTime}
         />
 
         <main className="flex-1 relative">
@@ -646,6 +763,17 @@ function App() {
 
           {showInfo && (
             <InfoModal onClose={() => setShowInfo(false)} />
+          )}
+
+          {showTimedEndModal && (
+            <TimedModeEndModal
+              capitalsGuessed={timedCapitalsGuessed}
+              sessionScore={timedSessionScore}
+              bestCapitals={timedBestCapitals}
+              bestScore={timedBestScore}
+              onPlayAgain={startTimedSession}
+              onExit={exitTimedMode}
+            />
           )}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-4" style={{ zIndex: 1000 }}>

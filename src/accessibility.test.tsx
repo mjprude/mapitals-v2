@@ -25,6 +25,15 @@ describe('Accessibility Tests', () => {
           showStars={true}
           setShowStars={() => {}}
           onResetHistory={() => {}}
+          gameMode="practice"
+          setGameMode={() => {}}
+          dailyCompleted={false}
+          timedMode={false}
+          timedSessionActive={false}
+          timeRemaining={120}
+          timerPaused={false}
+          onStartTimedSession={() => {}}
+          formatTime={(seconds: number) => `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`}
         />
       )
       const results = await axe(container)
@@ -72,6 +81,9 @@ describe('Accessibility Tests', () => {
           wrongGuesses={2}
           onPlayAgain={() => {}}
           isUSStatesMode={false}
+          gameMode="practice"
+          region="World"
+          todayDate="2025-12-08"
         />
       )
       const results = await axe(container)
@@ -87,6 +99,9 @@ describe('Accessibility Tests', () => {
           wrongGuesses={6}
           onPlayAgain={() => {}}
           isUSStatesMode={false}
+          gameMode="practice"
+          region="World"
+          todayDate="2025-12-08"
         />
       )
       const results = await axe(container)

@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Switch } from '@/components/ui/switch'
-import { Info, Settings, Calendar, Dumbbell } from 'lucide-react'
+import { Info, Settings, Calendar, Dumbbell, Timer } from 'lucide-react'
 import { Region } from '@/capitals'
 import { GameMode } from '@/utils/daily'
 
@@ -40,6 +40,12 @@ interface HeaderProps {
   gameMode: GameMode
   setGameMode: (mode: GameMode) => void
   dailyCompleted: boolean
+  timedMode: boolean
+  timedSessionActive: boolean
+  timeRemaining: number
+  timerPaused: boolean
+  onStartTimedSession: () => void
+  formatTime: (seconds: number) => string
 }
 
 export function Header({
@@ -58,6 +64,12 @@ export function Header({
   gameMode,
   setGameMode,
   dailyCompleted,
+  timedMode,
+  timedSessionActive,
+  timeRemaining,
+  timerPaused,
+  onStartTimedSession,
+  formatTime,
 }: HeaderProps) {
   const [showResetDialog, setShowResetDialog] = useState(false)
 
@@ -115,13 +127,32 @@ export function Header({
                 size="sm"
                 onClick={() => setGameMode('practice')}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  gameMode === 'practice'
+                  gameMode === 'practice' && !timedMode
                     ? 'bg-amber-500 text-white hover:bg-amber-500'
                     : 'text-white/80 hover:text-white hover:bg-white/20'
                 }`}
               >
                 <Dumbbell size={16} className="mr-1" />
                 {!isMobile && 'Practice'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onStartTimedSession}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  timedMode
+                    ? 'bg-rose-500 text-white hover:bg-rose-500'
+                    : 'text-white/80 hover:text-white hover:bg-white/20'
+                }`}
+              >
+                <Timer size={16} className="mr-1" />
+                {timedMode && timedSessionActive ? (
+                  <span className={timerPaused ? 'text-amber-200' : timeRemaining < 10 ? 'text-red-200' : ''}>
+                    {formatTime(timeRemaining)}
+                  </span>
+                ) : (
+                  !isMobile && 'Timed'
+                )}
               </Button>
             </div>
           </div>
