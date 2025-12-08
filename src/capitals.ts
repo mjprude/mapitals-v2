@@ -1,6 +1,6 @@
 export type Region = 'World' | 'Americas' | 'Europe' | 'Asia' | 'Africa' | 'Oceania' | 'US States'
 
-export const REGION_ORDER: Region[] = ['World', 'Americas', 'Europe', 'Asia', 'Africa', 'Oceania', 'US States']
+export const REGION_ORDER: Region[] = ['World', 'Africa', 'Americas', 'Asia', 'Europe', 'Oceania', 'US States']
 
 export interface Capital {
   city: string
