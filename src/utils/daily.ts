@@ -193,6 +193,6 @@ Score: ${totalScore} | ${totalWins}/${totalRegions} wins
     }
   }
   
-  shareText += `\nhttps://mapitals.vercel.app`
+  shareText += `\nhttps://www.mapitals.com`
   return shareText
 }
