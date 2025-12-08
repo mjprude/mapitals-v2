@@ -129,5 +129,70 @@ export function generateShareText(
 ${formattedDate}
 ${squares} ${result}/${maxWrongGuesses}
 
-https://mapitals.vercel.app`
+https://www.mapitals.com`
+}
+
+/**
+ * Checks if all regions have been completed for a given date.
+ */
+export function areAllRegionsCompleted(dateString: string, regions: Region[]): boolean {
+  return regions.every(region => isDailyCompleted(region, dateString))
+}
+
+/**
+ * Gets all daily results for all regions for a given date.
+ */
+export function getAllRegionResults(dateString: string, regions: Region[]): Map<Region, DailyResult | null> {
+  const results = new Map<Region, DailyResult | null>()
+  for (const region of regions) {
+    results.set(region, getDailyResult(region, dateString))
+  }
+  return results
+}
+
+/**
+ * Calculates the total score from all region results.
+ */
+export function calculateTotalScore(results: Map<Region, DailyResult | null>, maxWrongGuesses: number): number {
+  let total = 0
+  for (const result of results.values()) {
+    if (result && result.won) {
+      total += maxWrongGuesses - result.wrongGuesses
+    }
+  }
+  return total
+}
+
+/**
+ * Generates a Wordle-style share text for all completed regions.
+ */
+export function generateAllRegionsShareText(
+  dateString: string,
+  results: Map<Region, DailyResult | null>,
+  maxWrongGuesses: number
+): string {
+  const formattedDate = getFormattedDate(dateString)
+  const totalScore = calculateTotalScore(results, maxWrongGuesses)
+  const totalWins = Array.from(results.values()).filter(r => r?.won).length
+  const totalRegions = results.size
+  
+  let shareText = `Mapitals Daily - All Regions
+${formattedDate}
+Score: ${totalScore} | ${totalWins}/${totalRegions} wins
+
+`
+  
+  for (const [region, result] of results) {
+    if (result) {
+      const squares = Array(maxWrongGuesses)
+        .fill(null)
+        .map((_, i) => (i < result.wrongGuesses ? '🟥' : '🟩'))
+        .join('')
+      const resultText = result.won ? result.wrongGuesses : 'X'
+      shareText += `${region}: ${squares} ${resultText}/${maxWrongGuesses}\n`
+    }
+  }
+  
+  shareText += `\nhttps://mapitals.vercel.app`
+  return shareText
 }

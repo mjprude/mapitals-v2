@@ -16,12 +16,16 @@ import {
   isDailyCompleted,
   markDailyCompleted,
   saveDailyResult,
-  getDailyResult
+  getDailyResult,
+  areAllRegionsCompleted,
+  getAllRegionResults,
+  DailyResult
 } from './utils/daily'
 import { 
   MapController, 
   Header, 
   GameOverModal, 
+  AllRegionsCompleteModal,
   InfoModal, 
   Keyboard, 
   GameDisplay,
@@ -52,6 +56,8 @@ function App() {
   const [gameMode, setGameMode] = useState<GameMode>('daily')
   const [todayDate] = useState(() => getTodayDateString())
   const [dailyCompleted, setDailyCompleted] = useState(() => isDailyCompleted(region, getTodayDateString()))
+  const [showAllRegionsComplete, setShowAllRegionsComplete] = useState(false)
+  const [allRegionResults, setAllRegionResults] = useState<Map<Region, DailyResult | null>>(new Map())
   const [completedCapitals, setCompletedCapitals] = useState<CompletedCapital[]>(() => {
     const saved = localStorage.getItem('mapitals-completed-capitals')
     return saved ? JSON.parse(saved) : []
@@ -286,15 +292,28 @@ function App() {
   // Handler for game over primary action (Next Region in daily mode, Play Again in practice mode)
   const handleGameOverPrimaryAction = useCallback(() => {
     if (gameMode === 'daily') {
-      // In daily mode, cycle to the next region
-      const index = REGION_ORDER.indexOf(region)
-      const nextRegion = REGION_ORDER[(index + 1) % REGION_ORDER.length]
-      setRegion(nextRegion) // The useEffect on region will call startNewGame
+      // Check if all regions are now complete
+      if (areAllRegionsCompleted(todayDate, REGION_ORDER)) {
+        const results = getAllRegionResults(todayDate, REGION_ORDER)
+        setAllRegionResults(results)
+        setShowAllRegionsComplete(true)
+      } else {
+        // In daily mode, cycle to the next region
+        const index = REGION_ORDER.indexOf(region)
+        const nextRegion = REGION_ORDER[(index + 1) % REGION_ORDER.length]
+        setRegion(nextRegion) // The useEffect on region will call startNewGame
+      }
     } else {
       // In practice mode, just start a new game in the same region
       startNewGame()
     }
-  }, [gameMode, region, startNewGame])
+  }, [gameMode, region, startNewGame, todayDate])
+
+  // Handler for switching to practice mode from the all regions complete modal
+  const handleTryPracticeMode = useCallback(() => {
+    setShowAllRegionsComplete(false)
+    setGameMode('practice')
+  }, [])
 
   // Initialize game on first load (only once)
   useEffect(() => {
@@ -614,6 +633,14 @@ function App() {
               gameMode={gameMode}
               region={region}
               todayDate={todayDate}
+            />
+          )}
+
+          {showAllRegionsComplete && (
+            <AllRegionsCompleteModal
+              todayDate={todayDate}
+              results={allRegionResults}
+              onTryPracticeMode={handleTryPracticeMode}
             />
           )}
 
