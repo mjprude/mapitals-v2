@@ -28,7 +28,6 @@ export function GameOverModal({
   regionName,
   wrongGuesses,
   onPlayAgain,
-  isUSStatesMode,
   gameMode,
   region,
   todayDate,
@@ -56,7 +55,7 @@ export function GameOverModal({
     setIsLoadingWikipedia(true)
     setWikipediaBlurb(null)
     
-    const searchTerm = isUSStatesMode ? regionName : regionName
+    const searchTerm = city
     
     try {
       const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(searchTerm)}`
@@ -79,7 +78,7 @@ export function GameOverModal({
     } finally {
       setIsLoadingWikipedia(false)
     }
-  }, [regionName, isUSStatesMode])
+  }, [city])
 
   useEffect(() => {
     fetchWikipediaBlurb()
