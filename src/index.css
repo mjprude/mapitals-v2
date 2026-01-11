@@ -11,6 +11,19 @@ html, body {
 .leaflet-container {
   background: linear-gradient(to right, #7751f8, #8b5cf6, #06b6d4) !important;
 }
+
+@keyframes modal-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-modal-fade-in {
+  animation: modal-fade-in 0.4s ease-out forwards;
+}
 @layer base {
   :root {
     --radius: 0.5rem

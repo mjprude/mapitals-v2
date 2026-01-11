@@ -30,7 +30,8 @@ import {
   Keyboard, 
   GameDisplay,
   StarMarkers,
-  CompletedCapital
+  CompletedCapital,
+  StarCelebration
 } from './components/game'
 
 function App() {
@@ -60,6 +61,12 @@ function App() {
   const [todayDate] = useState(() => getTodayDateString())
   const [dailyCompleted, setDailyCompleted] = useState(() => isDailyCompleted(region, getTodayDateString()))
   const [showAllRegionsComplete, setShowAllRegionsComplete] = useState(false)
+  const [showStarCelebration, setShowStarCelebration] = useState(false)
+  const [celebrationWrongGuesses, setCelebrationWrongGuesses] = useState(0)
+  const [showGameOverModal, setShowGameOverModal] = useState(false)
+  const [pendingWinCelebration, setPendingWinCelebration] = useState(false)
+  const [pendingLossModal, setPendingLossModal] = useState(false)
+  const [pendingCompletedCapital, setPendingCompletedCapital] = useState<CompletedCapital | null>(null)
   const [allRegionResults, setAllRegionResults] = useState<Map<Region, DailyResult | null>>(new Map())
   const [completedCapitals, setCompletedCapitals] = useState<CompletedCapital[]>(() => {
     const saved = localStorage.getItem('mapitals-completed-capitals')
@@ -318,6 +325,17 @@ function App() {
     setGameMode('practice')
   }, [])
 
+  // Handler for when the star celebration animation completes
+  const handleStarCelebrationComplete = useCallback(() => {
+    setShowStarCelebration(false)
+    // Add the completed capital to the map now that the animation is done
+    if (pendingCompletedCapital) {
+      setCompletedCapitals(prev => [...prev, pendingCompletedCapital])
+      setPendingCompletedCapital(null)
+    }
+    setShowGameOverModal(true)
+  }, [pendingCompletedCapital])
+
   // Initialize game on first load (only once)
   useEffect(() => {
     if (hasGameInitializedRef.current) return
@@ -352,12 +370,34 @@ function App() {
     prevGameModeRef.current = gameMode
   }, [gameMode, startNewGame])
 
-  // Reset showOutline when a new game starts
+  // Reset showOutline and other states when a new game starts
   useEffect(() => {
     if (!gameOver) {
       setShowOutline(false)
+      setShowGameOverModal(false)
+      setPendingWinCelebration(false)
+      setPendingLossModal(false)
+      setPendingCompletedCapital(null)
     }
   }, [gameOver])
+
+  // When zoom completes (showOutline becomes true) and we have a pending win celebration,
+  // start the star animation
+  useEffect(() => {
+    if (showOutline && pendingWinCelebration && won) {
+      setPendingWinCelebration(false)
+      setShowStarCelebration(true)
+    }
+  }, [showOutline, pendingWinCelebration, won])
+
+  // When zoom completes (showOutline becomes true) and we have a pending loss modal,
+  // show the game over modal
+  useEffect(() => {
+    if (showOutline && pendingLossModal && !won) {
+      setPendingLossModal(false)
+      setShowGameOverModal(true)
+    }
+  }, [showOutline, pendingLossModal, won])
 
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
@@ -407,6 +447,8 @@ function App() {
       setWrongGuesses(newWrongGuesses)
       setShouldPan(true)
       if (newWrongGuesses >= MAX_WRONG_GUESSES) {
+        // Trigger the map zoom first, then show modal after zoom completes
+        setPendingLossModal(true)
         setGameOver(true)
         setGamesPlayed(prev => prev + 1)
         // Reset streak on loss
@@ -425,8 +467,11 @@ function App() {
     } else {
       const tempGuessed = new Set(newGuessedLetters)
       if (isWordCompleteWithSet(city, tempGuessed) &&
-            isWordCompleteWithSet(regionName, tempGuessed)) {
-        setGameOver(true)
+              isWordCompleteWithSet(regionName, tempGuessed)) {
+        // First trigger the map zoom, then star animation, then modal
+        setCelebrationWrongGuesses(wrongGuesses)
+        setPendingWinCelebration(true)
+        setGameOver(true) // This triggers the map zoom
         setWon(true)
         setScore(prev => prev + (MAX_WRONG_GUESSES - wrongGuesses))
         setGamesPlayed(prev => prev + 1)
@@ -436,16 +481,16 @@ function App() {
           setBestStreak(best => Math.max(best, newStreak))
           return newStreak
         })
-        // Add completed capital with star marker
+        // Store pending completed capital - will be added after star animation completes
         const lat = isUSStatesMode ? currentStateCapital?.lat : currentCapital?.lat
         const lng = isUSStatesMode ? currentStateCapital?.lng : currentCapital?.lng
         if (lat !== undefined && lng !== undefined) {
-          setCompletedCapitals(prev => [...prev, {
+          setPendingCompletedCapital({
             lat,
             lng,
             city,
             wrongGuesses
-          }])
+          })
         }
         // Save daily result if in daily mode
         if (gameMode === 'daily') {
@@ -463,6 +508,8 @@ function App() {
 
   const handleGiveUp = useCallback(() => {
     if (gameOver) return
+    // Trigger the map zoom first, then show modal after zoom completes
+    setPendingLossModal(true)
     setGameOver(true)
     setWon(false)
     setGamesPlayed(prev => prev + 1)
@@ -625,7 +672,14 @@ function App() {
             )}
           </div>
 
-          {gameOver && city && regionName && (
+          {showStarCelebration && (
+            <StarCelebration
+              wrongGuesses={celebrationWrongGuesses}
+              onAnimationComplete={handleStarCelebrationComplete}
+            />
+          )}
+
+          {showGameOverModal && city && regionName && (
             <GameOverModal
               won={won}
               city={city}
@@ -636,6 +690,7 @@ function App() {
               gameMode={gameMode}
               region={region}
               todayDate={todayDate}
+              fadeIn={won}
             />
           )}
 
