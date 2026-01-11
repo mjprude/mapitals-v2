@@ -45,7 +45,10 @@ function App() {
   const [statesGeoJson, setStatesGeoJson] = useState<GeoJSON.FeatureCollection | null>(null)
   const [region, setRegion] = useState<Region>('World')
   const [isInitialLoad, setIsInitialLoad] = useState(true)
-  const [showInfo, setShowInfo] = useState(false)
+  const [showInfo, setShowInfo] = useState(() => {
+    const hasSeenInfo = localStorage.getItem('mapitals-has-seen-info')
+    return hasSeenInfo !== 'true'
+  })
   const [shouldPan, setShouldPan] = useState(false)
   const [isRegionMenuOpen, setIsRegionMenuOpen] = useState(false)
   const [showOutline, setShowOutline] = useState(false)
@@ -645,7 +648,10 @@ function App() {
           )}
 
           {showInfo && (
-            <InfoModal onClose={() => setShowInfo(false)} />
+            <InfoModal onClose={() => {
+              localStorage.setItem('mapitals-has-seen-info', 'true')
+              setShowInfo(false)
+            }} />
           )}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center pb-4" style={{ zIndex: 1000 }}>
