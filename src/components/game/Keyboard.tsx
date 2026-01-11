@@ -28,7 +28,7 @@ export const Keyboard = forwardRef<HTMLDivElement, KeyboardProps>(
           disabled={isGuessed || gameOver}
           variant="outline"
           className={`
-            ${isMobile ? 'h-10 w-10 text-base' : 'h-8 w-8 sm:h-9 sm:w-9 text-sm sm:text-base'} p-0 font-bold rounded-lg transition-all
+            ${isMobile ? 'h-10 flex-1 min-w-0 text-base' : 'h-8 w-8 sm:h-9 sm:w-9 text-sm sm:text-base'} p-0 font-bold rounded-lg transition-all
             ${isGuessed
           ? isCorrect
             ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 border-emerald-300 text-white shadow-md shadow-emerald-500/40'
@@ -46,12 +46,12 @@ export const Keyboard = forwardRef<HTMLDivElement, KeyboardProps>(
       <div 
         ref={ref} 
         tabIndex={-1} 
-        className="bg-white/10 backdrop-blur-sm rounded-xl px-3 py-3 outline-none shadow-lg" 
+        className="bg-white/10 backdrop-blur-sm rounded-xl px-3 py-3 outline-none shadow-lg w-full" 
         aria-label="Guess a letter"
       >
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="flex flex-col items-center gap-1.5 w-full">
           {KEYBOARD_ROWS.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex justify-center gap-1.5">
+            <div key={rowIndex} className="flex justify-center gap-1 w-full">
               {row.map(renderKey)}
             </div>
           ))}
