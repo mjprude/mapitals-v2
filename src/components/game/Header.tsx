@@ -231,7 +231,7 @@ export function Header({
 
       {/* Mobile Menu Modal */}
       <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <DialogContent className="bg-slate-800 border-slate-600 text-white max-w-sm">
+        <DialogContent className="bg-slate-800 border-slate-600 text-white max-w-sm" style={{ zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle className="text-white text-xl font-bold">Mapitals</DialogTitle>
           </DialogHeader>
