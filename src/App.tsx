@@ -30,7 +30,8 @@ import {
   Keyboard, 
   GameDisplay,
   StarMarkers,
-  CompletedCapital
+  CompletedCapital,
+  StarCelebration
 } from './components/game'
 
 function App() {
@@ -57,6 +58,8 @@ function App() {
   const [todayDate] = useState(() => getTodayDateString())
   const [dailyCompleted, setDailyCompleted] = useState(() => isDailyCompleted(region, getTodayDateString()))
   const [showAllRegionsComplete, setShowAllRegionsComplete] = useState(false)
+  const [showStarCelebration, setShowStarCelebration] = useState(false)
+  const [celebrationWrongGuesses, setCelebrationWrongGuesses] = useState(0)
   const [allRegionResults, setAllRegionResults] = useState<Map<Region, DailyResult | null>>(new Map())
   const [completedCapitals, setCompletedCapitals] = useState<CompletedCapital[]>(() => {
     const saved = localStorage.getItem('mapitals-completed-capitals')
@@ -315,6 +318,12 @@ function App() {
     setGameMode('practice')
   }, [])
 
+  // Handler for when the star celebration animation completes
+  const handleStarCelebrationComplete = useCallback(() => {
+    setShowStarCelebration(false)
+    setGameOver(true)
+  }, [])
+
   // Initialize game on first load (only once)
   useEffect(() => {
     if (hasGameInitializedRef.current) return
@@ -422,8 +431,10 @@ function App() {
     } else {
       const tempGuessed = new Set(newGuessedLetters)
       if (isWordCompleteWithSet(city, tempGuessed) &&
-            isWordCompleteWithSet(regionName, tempGuessed)) {
-        setGameOver(true)
+              isWordCompleteWithSet(regionName, tempGuessed)) {
+        // Show star celebration animation first
+        setCelebrationWrongGuesses(wrongGuesses)
+        setShowStarCelebration(true)
         setWon(true)
         setScore(prev => prev + (MAX_WRONG_GUESSES - wrongGuesses))
         setGamesPlayed(prev => prev + 1)
@@ -621,6 +632,13 @@ function App() {
               </Button>
             )}
           </div>
+
+          {showStarCelebration && (
+            <StarCelebration
+              wrongGuesses={celebrationWrongGuesses}
+              onAnimationComplete={handleStarCelebrationComplete}
+            />
+          )}
 
           {gameOver && city && regionName && (
             <GameOverModal
