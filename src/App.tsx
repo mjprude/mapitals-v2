@@ -60,6 +60,8 @@ function App() {
   const [showAllRegionsComplete, setShowAllRegionsComplete] = useState(false)
   const [showStarCelebration, setShowStarCelebration] = useState(false)
   const [celebrationWrongGuesses, setCelebrationWrongGuesses] = useState(0)
+  const [showGameOverModal, setShowGameOverModal] = useState(false)
+  const [pendingWinCelebration, setPendingWinCelebration] = useState(false)
   const [allRegionResults, setAllRegionResults] = useState<Map<Region, DailyResult | null>>(new Map())
   const [completedCapitals, setCompletedCapitals] = useState<CompletedCapital[]>(() => {
     const saved = localStorage.getItem('mapitals-completed-capitals')
@@ -321,7 +323,7 @@ function App() {
   // Handler for when the star celebration animation completes
   const handleStarCelebrationComplete = useCallback(() => {
     setShowStarCelebration(false)
-    setGameOver(true)
+    setShowGameOverModal(true)
   }, [])
 
   // Initialize game on first load (only once)
@@ -358,12 +360,23 @@ function App() {
     prevGameModeRef.current = gameMode
   }, [gameMode, startNewGame])
 
-  // Reset showOutline when a new game starts
+  // Reset showOutline and other states when a new game starts
   useEffect(() => {
     if (!gameOver) {
       setShowOutline(false)
+      setShowGameOverModal(false)
+      setPendingWinCelebration(false)
     }
   }, [gameOver])
+
+  // When zoom completes (showOutline becomes true) and we have a pending win celebration,
+  // start the star animation
+  useEffect(() => {
+    if (showOutline && pendingWinCelebration && won) {
+      setPendingWinCelebration(false)
+      setShowStarCelebration(true)
+    }
+  }, [showOutline, pendingWinCelebration, won])
 
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
@@ -432,9 +445,10 @@ function App() {
       const tempGuessed = new Set(newGuessedLetters)
       if (isWordCompleteWithSet(city, tempGuessed) &&
               isWordCompleteWithSet(regionName, tempGuessed)) {
-        // Show star celebration animation first
+        // First trigger the map zoom, then star animation, then modal
         setCelebrationWrongGuesses(wrongGuesses)
-        setShowStarCelebration(true)
+        setPendingWinCelebration(true)
+        setGameOver(true) // This triggers the map zoom
         setWon(true)
         setScore(prev => prev + (MAX_WRONG_GUESSES - wrongGuesses))
         setGamesPlayed(prev => prev + 1)
@@ -640,7 +654,7 @@ function App() {
             />
           )}
 
-          {gameOver && city && regionName && (
+          {((showGameOverModal && won) || (gameOver && !won)) && city && regionName && (
             <GameOverModal
               won={won}
               city={city}
@@ -651,6 +665,7 @@ function App() {
               gameMode={gameMode}
               region={region}
               todayDate={todayDate}
+              fadeIn={won}
             />
           )}
 

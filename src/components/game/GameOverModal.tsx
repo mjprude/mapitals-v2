@@ -15,6 +15,7 @@ interface GameOverModalProps {
   gameMode: GameMode
   region: Region
   todayDate: string
+  fadeIn?: boolean
 }
 
 interface WikipediaBlurb {
@@ -31,6 +32,7 @@ export function GameOverModal({
   gameMode,
   region,
   todayDate,
+  fadeIn = false,
 }: GameOverModalProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -150,7 +152,7 @@ export function GameOverModal({
     <div className="absolute inset-x-0 top-16 flex justify-center" style={{ zIndex: 1001 }}>
       <div 
         ref={modalRef}
-        className="bg-gradient-to-br from-[#7751f8] to-[#4c1d95] border-2 border-violet-300/50 text-white max-w-md rounded-2xl p-6 backdrop-blur-sm mx-4 select-none shadow-2xl shadow-purple-500/40"
+        className={`bg-gradient-to-br from-[#7751f8] to-[#4c1d95] border-2 border-violet-300/50 text-white max-w-md rounded-2xl p-6 backdrop-blur-sm mx-4 select-none shadow-2xl shadow-purple-500/40 ${fadeIn ? 'animate-modal-fade-in' : ''}`}
         style={{ 
           transform: `translate(${position.x}px, ${position.y}px)`,
           cursor: isDragging ? 'grabbing' : 'default'
