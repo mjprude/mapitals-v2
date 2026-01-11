@@ -38,11 +38,11 @@ export function StarCelebration({ wrongGuesses, onAnimationComplete }: StarCeleb
 
     const pulseTimer = setTimeout(() => {
       setPhase('exit')
-    }, 1200)
+    }, 800)
 
     const exitTimer = setTimeout(() => {
       onAnimationComplete()
-    }, 1800)
+    }, 1400)
 
     return () => {
       clearTimeout(enterTimer)
