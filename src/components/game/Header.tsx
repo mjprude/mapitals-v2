@@ -127,7 +127,6 @@ export function Header({
             setRegion(value as Region)
             setShowMobileMenu(false)
           }}
-          onOpenChange={onOpenChange}
         >
           <SelectTrigger className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600" aria-label="Select region">
             <SelectValue placeholder="Region" />
@@ -170,7 +169,7 @@ export function Header({
       <div className="flex flex-col gap-2">
         <span className="text-slate-300 text-sm font-medium">Settings</span>
         <div className="flex items-center justify-between bg-slate-700 rounded-lg p-3">
-          <span className="text-white">Show Correct Guesses</span>
+          <span className="text-white">Show guessed capitals on map</span>
           <Switch
             checked={showStars}
             onCheckedChange={setShowStars}
@@ -231,7 +230,7 @@ export function Header({
 
       {/* Mobile Menu Modal */}
       <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <DialogContent className="bg-slate-800 border-slate-600 text-white max-w-sm" style={{ zIndex: 9999 }}>
+        <DialogContent className="bg-slate-800 border-slate-600 text-white max-w-sm rounded-xl" style={{ zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle className="text-white text-xl font-bold">Mapitals</DialogTitle>
           </DialogHeader>
