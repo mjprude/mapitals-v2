@@ -59,7 +59,8 @@ export function GameOverModal({
     setIsLoadingWikipedia(true)
     setWikipediaBlurb(null)
     
-    const searchTerm = city
+    // Include both city and state/country to disambiguate (e.g., "Saint Paul, Minnesota" vs "Saint Paul")
+    const searchTerm = `${city}, ${regionName}`
     
     try {
       const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(searchTerm)}`
@@ -82,7 +83,7 @@ export function GameOverModal({
     } finally {
       setIsLoadingWikipedia(false)
     }
-  }, [city])
+  }, [city, regionName])
 
   useEffect(() => {
     fetchWikipediaBlurb()
@@ -179,7 +180,7 @@ export function GameOverModal({
         
         <div className="mt-4 p-3 bg-white/10 rounded-xl border border-white/20">
           <h3 className="text-sm font-bold text-cyan-300 mb-2 uppercase tracking-wide">
-            About {regionName}
+            About {city}
           </h3>
           {isLoadingWikipedia ? (
             <p className="text-sm text-white/60 italic">Loading...</p>
