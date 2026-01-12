@@ -241,8 +241,8 @@ export function Header({
       <header className="bg-gradient-to-r from-[#7751f8] via-[#8b5cf6] to-[#06b6d4] p-3 shadow-lg z-50">
         <div className="container mx-auto flex justify-between items-center">
           {isMobile ? (
-          /* Mobile: Menu button, logo, and region selector */
-            <>
+          /* Mobile: Menu button, logo, and region selector on the left */
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 onClick={() => setShowMobileMenu(true)}
@@ -269,7 +269,7 @@ export function Header({
                   <SelectItem value="US States" className="text-white hover:bg-slate-700">US States</SelectItem>
                 </SelectContent>
               </Select>
-            </>
+            </div>
           ): (
             /* Desktop: Full header */
             <>
