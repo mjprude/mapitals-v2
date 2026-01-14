@@ -16,7 +16,6 @@ describe('Accessibility Tests', () => {
           region="World"
           setRegion={() => {}}
           onOpenChange={() => {}}
-          score={100}
           gamesPlayed={10}
           currentStreak={5}
           bestStreak={10}

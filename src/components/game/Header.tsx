@@ -34,7 +34,6 @@ interface HeaderProps {
   region: Region
   setRegion: (region: Region) => void
   onOpenChange: (open: boolean) => void
-  score: number
   gamesPlayed: number
   currentStreak: number
   bestStreak: number
@@ -54,7 +53,6 @@ export function Header({
   region,
   setRegion,
   onOpenChange,
-  score,
   gamesPlayed,
   currentStreak,
   bestStreak,
@@ -136,18 +134,14 @@ export function Header({
       {/* Stats */}
       <div className="flex flex-col gap-2">
         <span className="text-slate-300 text-sm font-medium">Stats</span>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-slate-700 rounded-lg p-3 text-center">
-            <div className="text-amber-300 font-bold text-lg">{score}</div>
-            <div className="text-slate-400 text-xs">Score</div>
-          </div>
+        <div className="grid grid-cols-2 gap-2">
           <div className="bg-slate-700 rounded-lg p-3 text-center">
             <div className="text-white font-bold text-lg">{gamesPlayed}</div>
             <div className="text-slate-400 text-xs">Games</div>
           </div>
           <div className="bg-slate-700 rounded-lg p-3 text-center">
             <div className="text-pink-300 font-bold text-lg">{currentStreak}</div>
-            <div className="text-slate-400 text-xs">Streak</div>
+            <div className="text-slate-400 text-xs">Win Streak</div>
           </div>
         </div>
         {bestStreak > 0 && (
@@ -208,7 +202,7 @@ export function Header({
           <AlertDialogHeader>
             <AlertDialogTitle>Reset History</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-300">
-              Are you sure you want to reset all your history? This will clear your score, games played, streaks, and all completed capitals. This action cannot be undone.
+              Are you sure you want to reset all your history? This will clear your games played, streaks, and all completed capitals. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -360,19 +354,13 @@ export function Header({
                 />
                 <div className="flex items-center gap-2 text-sm">
                   <span className="bg-white/20 px-2 py-1 rounded-full">
-                    <span className="text-white/90">Score: </span>
-                    <span className="text-amber-300 font-bold">{score}</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="bg-white/20 px-2 py-1 rounded-full">
                     <span className="text-white/90">Games: </span>
                     <span className="text-amber-300 font-bold">{gamesPlayed}</span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <span className="bg-white/20 px-2 py-1 rounded-full">
-                    <span className="text-white/90">Streak: </span>
+                    <span className="text-white/90">Win Streak: </span>
                     <span className="text-pink-300 font-bold">{currentStreak}</span>
                     {bestStreak > 0 && <span className="text-white/60 text-xs ml-1">(best: {bestStreak})</span>}
                   </span>
