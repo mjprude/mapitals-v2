@@ -96,17 +96,9 @@ function App() {
   const [capitalIndex, setCapitalIndex] = useState(0)
   const [stateCapitalIndex, setStateCapitalIndex] = useState(0)
 
-  // Load score and gamesPlayed from localStorage (mode-specific)
-  const [dailyScore, setDailyScore] = useState(() => {
-    const saved = localStorage.getItem('mapitals-daily-score')
-    return saved ? parseInt(saved, 10) : 0
-  })
+  // Load gamesPlayed from localStorage (mode-specific)
   const [dailyGamesPlayed, setDailyGamesPlayed] = useState(() => {
     const saved = localStorage.getItem('mapitals-daily-games-played')
-    return saved ? parseInt(saved, 10) : 0
-  })
-  const [practiceScore, setPracticeScore] = useState(() => {
-    const saved = localStorage.getItem('mapitals-practice-score')
     return saved ? parseInt(saved, 10) : 0
   })
   const [practiceGamesPlayed, setPracticeGamesPlayed] = useState(() => {
@@ -114,10 +106,8 @@ function App() {
     return saved ? parseInt(saved, 10) : 0
   })
 
-  // Current mode's score and games played
-  const score = gameMode === 'daily' ? dailyScore : practiceScore
+  // Current mode's games played
   const gamesPlayed = gameMode === 'daily' ? dailyGamesPlayed : practiceGamesPlayed
-  const setScore = gameMode === 'daily' ? setDailyScore : setPracticeScore
   const setGamesPlayed = gameMode === 'daily' ? setDailyGamesPlayed : setPracticeGamesPlayed
 
   // Streak tracking (mode-specific)
@@ -151,19 +141,10 @@ function App() {
   [region]
   )
 
-  // Save daily scores to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('mapitals-daily-score', dailyScore.toString())
-  }, [dailyScore])
-
+  // Save games played to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('mapitals-daily-games-played', dailyGamesPlayed.toString())
   }, [dailyGamesPlayed])
-
-  // Save practice scores to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('mapitals-practice-score', practiceScore.toString())
-  }, [practiceScore])
 
   useEffect(() => {
     localStorage.setItem('mapitals-practice-games-played', practiceGamesPlayed.toString())
@@ -210,11 +191,9 @@ function App() {
   const resetHistory = useCallback(() => {
     setCompletedCapitals([])
     // Reset both modes' stats
-    setDailyScore(0)
     setDailyGamesPlayed(0)
     setDailyCurrentStreak(0)
     setDailyBestStreak(0)
-    setPracticeScore(0)
     setPracticeGamesPlayed(0)
     setPracticeCurrentStreak(0)
     setPracticeBestStreak(0)
@@ -482,7 +461,6 @@ function App() {
         setPendingWinCelebration(true)
         setGameOver(true) // This triggers the map zoom
         setWon(true)
-        setScore(prev => prev + (MAX_WRONG_GUESSES - wrongGuesses))
         setGamesPlayed(prev => prev + 1)
         // Update streaks on win
         setCurrentStreak(prev => {
@@ -513,7 +491,7 @@ function App() {
         }
       }
     }
-  }, [gameOver, guessedLetters, currentCapital, currentStateCapital, wrongGuesses, isUSStatesMode, gameMode, region, todayDate, setScore, setGamesPlayed, setCurrentStreak, setBestStreak])
+  }, [gameOver, guessedLetters, currentCapital, currentStateCapital, wrongGuesses, isUSStatesMode, gameMode, region, todayDate, setGamesPlayed, setCurrentStreak, setBestStreak])
 
   const handleGiveUp = useCallback(() => {
     if (gameOver) return
@@ -604,7 +582,6 @@ function App() {
           region={region}
           setRegion={setRegion}
           onOpenChange={handleOpenChange}
-          score={score}
           gamesPlayed={gamesPlayed}
           currentStreak={currentStreak}
           bestStreak={bestStreak}
